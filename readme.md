@@ -11,6 +11,10 @@ Reference-Guided Attentive Alignment**
 
 <img src='./figure/teaser.png' width='100%' />
 
+## 🖼️ Visual Results
+
+<img src='./figure/compare.png' width='100%' />
+
 ## 🔧 Dependencies and Installation
 
 We recommend using Python 3.10 and PyTorch with CUDA support. To set up the environment:
