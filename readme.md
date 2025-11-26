@@ -3,7 +3,7 @@
 > **The Consistency Critic: Correcting Inconsistencies in Generated Images via
 Reference-Guided Attentive Alignment**
 
-<a href="https://ouyangziheng.github.io/ImageCritic-Page/"><img src="https://img.shields.io/badge/arXiv-ImageCritic-red" alt="HuggingFace"></a>
+<a href="https://arxiv.org/abs/2511.20614"><img src="https://img.shields.io/badge/arXiv-ImageCritic-red" alt="HuggingFace"></a>
 <a href="https://ouyangziheng.github.io/ImageCritic-Page/"><img src="https://img.shields.io/badge/Project%20Page-ImageCritic-blue" alt="HuggingFace"></a>
 <a href="https://huggingface.co/spaces/ziheng1234/ImageCritic"><img src="https://img.shields.io/badge/🤗_HuggingFace-Space-ffbd45.svg" alt="HuggingFace"></a>
 <a href="https://huggingface.co/ziheng1234/ImageCritic"><img src="https://img.shields.io/badge/🤗_HuggingFace-Model-ffbd45.svg" alt="HuggingFace"></a>
