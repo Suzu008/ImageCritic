@@ -66,15 +66,15 @@ device = "cuda:0"
 
 pipeline = FluxKontextPipelineWithPhotoEncoderAddTokens.from_pretrained("./kontext", torch_dtype=torch.bfloat16)
 pipeline.to(device)
-transformer = FluxTransformer2DModel.from_pretrained(
-    "./kontext", 
-    subfolder="transformer",
-    torch_dtype=torch.bfloat16, 
-)
-transformer.to(device)
+# transformer = FluxTransformer2DModel.from_pretrained(
+#     "./kontext", 
+#     subfolder="transformer",
+#     torch_dtype=torch.bfloat16, 
+# )
+# transformer.to(device)
 
 state_dict = load_file(detail_encoder_path)
-detail_encoder = DetailEncoder().to(dtype=transformer.dtype, device=device)
+detail_encoder = DetailEncoder().to(dtype=pipeline.transformer.dtype, device=device)
 detail_encoder.to(device)
 with torch.no_grad():
     for name, param in detail_encoder.named_parameters():
@@ -82,7 +82,6 @@ with torch.no_grad():
             added = state_dict[name].to(param.device)  
             param.add_(added)
 
-pipeline.transformer = transformer
 pipeline.detail_encoder = detail_encoder
 set_single_lora(pipeline.transformer, kontext_lora_path, lora_weights=[1])
 
