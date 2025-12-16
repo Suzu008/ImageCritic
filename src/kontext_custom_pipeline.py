@@ -821,25 +821,25 @@ class FluxKontextPipelineWithPhotoEncoderAddTokens(
         #     )
 
         # 1. Check inputs. Raise error if not correct
-        self.check_inputs(
-            prompt,
-            prompt_2,
-            height,
-            width,
-            negative_prompt=negative_prompt,
-            negative_prompt_2=negative_prompt_2,
-            prompt_embeds=prompt_embeds,
-            negative_prompt_embeds=negative_prompt_embeds,
-            pooled_prompt_embeds=pooled_prompt_embeds,
-            negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
-            callback_on_step_end_tensor_inputs=callback_on_step_end_tensor_inputs,
-            max_sequence_length=max_sequence_length,
-        )
+        # self.check_inputs(
+        #     prompt,
+        #     prompt_2,
+        #     height,
+        #     width,
+        #     negative_prompt=negative_prompt,
+        #     negative_prompt_2=negative_prompt_2,
+        #     prompt_embeds=prompt_embeds,
+        #     negative_prompt_embeds=negative_prompt_embeds,
+        #     pooled_prompt_embeds=pooled_prompt_embeds,
+        #     negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
+        #     callback_on_step_end_tensor_inputs=callback_on_step_end_tensor_inputs,
+        #     max_sequence_length=max_sequence_length,
+        # )
 
-        self._guidance_scale = guidance_scale
-        self._joint_attention_kwargs = joint_attention_kwargs
-        self._current_timestep = None
-        self._interrupt = False
+        # self._guidance_scale = guidance_scale
+        # self._joint_attention_kwargs = joint_attention_kwargs
+        # self._current_timestep = None
+        # self._interrupt = False
 
         # 2. Define call parameters
         if prompt is not None and isinstance(prompt, str):
@@ -855,10 +855,12 @@ class FluxKontextPipelineWithPhotoEncoderAddTokens(
         has_neg_prompt = negative_prompt is not None or (
             negative_prompt_embeds is not None and negative_pooled_prompt_embeds is not None
         )
+
         trigger_word = ["IMG1", "IMG2"]
         self.tokenizer_2.add_tokens(trigger_word, special_tokens=True)
         image_A_token_id = self.tokenizer_2.convert_tokens_to_ids(trigger_word[0])
         image_B_token_id = self.tokenizer_2.convert_tokens_to_ids(trigger_word[1])
+
         do_true_cfg = true_cfg_scale > 1 and has_neg_prompt
         (
             prompt_embeds,
@@ -909,6 +911,7 @@ class FluxKontextPipelineWithPhotoEncoderAddTokens(
             image_width = image_width // multiple_of * multiple_of
             image_height = image_height // multiple_of * multiple_of
             image_A = self.image_processor.resize(image_A, image_height, image_width)
+            # convert to tensor and normalized [0,1] to [-1,1]
             image_A = self.image_processor.preprocess(image_A, image_height, image_width)
             image_B = self.image_processor.resize(image_B, image_height, image_width)
             image_B = self.image_processor.preprocess(image_B, image_height, image_width)

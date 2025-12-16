@@ -14,8 +14,9 @@ VISION_CONFIG_DICT = {
     "num_attention_heads": 16,
     "num_hidden_layers": 24,
     "patch_size": 14,
-    "projection_dim": 768
+    "projection_dim": 768,
 }
+
 
 class MLP(nn.Module):
     def __init__(self, in_dim, out_dim, hidden_dim, use_residual=True):
@@ -62,16 +63,11 @@ class FuseModule(nn.Module):
         device = prompt_embeds.device
         class_tokens_mask = class_tokens_mask.to(device)
         id_embeds = id_embeds.to(prompt_embeds.dtype)
-        num_inputs = class_tokens_mask.sum().unsqueeze(0).to(id_embeds.device) 
+        num_inputs = class_tokens_mask.sum().unsqueeze(0).to(id_embeds.device)
         batch_size, max_num_inputs = id_embeds.shape[:2]
         seq_length = prompt_embeds.shape[1]
-        flat_id_embeds = id_embeds.view(
-            -1, id_embeds.shape[-2], id_embeds.shape[-1]
-        )
-        valid_id_mask = (
-            torch.arange(max_num_inputs, device=flat_id_embeds.device)[None, :]
-            < num_inputs[:, None]
-        )
+        flat_id_embeds = id_embeds.view(-1, id_embeds.shape[-2], id_embeds.shape[-1])
+        valid_id_mask = torch.arange(max_num_inputs, device=flat_id_embeds.device)[None, :] < num_inputs[:, None]
         valid_id_embeds = flat_id_embeds[valid_id_mask.flatten()]
 
         prompt_embeds = prompt_embeds.view(-1, prompt_embeds.shape[-1])
@@ -80,14 +76,16 @@ class FuseModule(nn.Module):
         image_token_embeds = prompt_embeds[class_tokens_mask]
         stacked_id_embeds = self.fuse_fn(image_token_embeds, valid_id_embeds)
         stacked_id_embeds = stacked_id_embeds.to(device=device, dtype=prompt_embeds.dtype)
-        assert class_tokens_mask.sum() == stacked_id_embeds.shape[0], f"{class_tokens_mask.sum()} != {stacked_id_embeds.shape[0]}"
+        assert class_tokens_mask.sum() == stacked_id_embeds.shape[0], (
+            f"{class_tokens_mask.sum()} != {stacked_id_embeds.shape[0]}"
+        )
         prompt_embeds = prompt_embeds.masked_scatter(class_tokens_mask[:, None], stacked_id_embeds.to(prompt_embeds.dtype))
         updated_prompt_embeds = prompt_embeds.view(batch_size, seq_length, -1)
         return updated_prompt_embeds
 
+
 class DetailEncoder(CLIPVisionModelWithProjection):
     def __init__(self):
-        
         super().__init__(CLIPVisionConfig(**VISION_CONFIG_DICT))
         self.visual_projection_2 = nn.Linear(1024, 1280, bias=False)
         self.fuse_module = FuseModule(4096, 2048)
@@ -100,19 +98,19 @@ class DetailEncoder(CLIPVisionModelWithProjection):
         id_pixel_values = id_pixel_values.to(device=device, dtype=dtype)
         prompt_embeds = prompt_embeds.to(device=device, dtype=dtype)
         class_tokens_mask = class_tokens_mask.to(device=device)
-        
+
         id_pixel_values = id_pixel_values.view(b * num_inputs, c, h, w)
-        
+
         id_pixel_values = F.interpolate(id_pixel_values, size=(224, 224), mode="bilinear", align_corners=False)
         # id embeds <--> input image
         shared_id_embeds = self.vision_model(id_pixel_values)[1]
+
         id_embeds = self.visual_projection(shared_id_embeds)
         id_embeds_2 = self.visual_projection_2(shared_id_embeds)
 
         id_embeds = id_embeds.view(b, num_inputs, 1, -1)
-        id_embeds_2 = id_embeds_2.view(b, num_inputs, 1, -1)    
+        id_embeds_2 = id_embeds_2.view(b, num_inputs, 1, -1)
 
         id_embeds = torch.cat((id_embeds, id_embeds_2), dim=-1)
         updated_prompt_embeds = self.fuse_module(prompt_embeds, id_embeds, class_tokens_mask)
         return updated_prompt_embeds
-    
